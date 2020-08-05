@@ -13,8 +13,9 @@
 #define IDC_TIMER                       109
 #define IDS_FIRSTCOLUMN                 110
 #define IDS_COLUMN2                     111
-#define IDS_COLUMN3                     112
-#define IDS_COLUMN4                     113
+#define IDS_STRING104                   112
+#define IDS_COLUMN3                     113
+#define IDS_COLUMN4                     114
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG1                     130
 #define BTN_ADD                         177
@@ -25,6 +26,7 @@
 #define IDC_COMBO1                      1014
 #define ID_APPLY                        1015
 #define IDC_LIST1                       1016
+#define IDS_STRING112                   1132
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

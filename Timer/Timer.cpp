@@ -4,9 +4,9 @@
 #include "framework.h"
 #include "Timer.h"
 #include <string>
+#include <future>
 #include <CommCtrl.h>
 #include <Uxtheme.h>
-#include "Action.h"
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "uxtheme.lib")
 
@@ -137,11 +137,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    }
 
    HWND hwndButton = CreateWindowEx(0,
-	   L"BUTTON",L"+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 670, 10, 30,
+	   L"BUTTON",L"+", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 730, 10, 30,
 	   30, mainWnd, (HMENU)BTN_ADD, hInst, NULL);
 	
    HWND hwndButton2 = CreateWindowEx(0,
-	   L"BUTTON", L"-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 670, 50, 30,
+	   L"BUTTON", L"-", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 730, 50, 30,
 	   30, mainWnd, (HMENU)BTN_DEL, hInst, NULL);
 
 
@@ -159,7 +159,7 @@ HWND getListView(HWND parent) {
 	icex.dwICC = ICC_LISTVIEW_CLASSES;
 	InitCommonControlsEx(&icex);
 
-	HWND hWndListView = CreateWindow(WC_LISTVIEW, L"ListView", WS_CHILD | WS_BORDER | LVS_REPORT | LVS_EDITLABELS, 10, 10, 651, 500, parent, NULL, hInst, NULL);
+	HWND hWndListView = CreateWindow(WC_LISTVIEW, L"ListView", WS_CHILD | WS_BORDER | LVS_REPORT | LVS_EDITLABELS, 10, 10, 700, 500, parent, NULL, hInst, NULL);
 
 	SendMessage(hWndListView, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 
@@ -176,7 +176,7 @@ BOOL InitListViewColumns() {
 	// The mask specifies that the format, width, text,
 	// and subitem members of the structure are valid.
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	int colSize[C_COLUMNS] = { 50, 250, 175,175 };
+	int colSize[C_COLUMNS] = { 50, 175, 175,175,125 };
 
 	// Add the columns.
 	for (int iCol = 0; iCol < C_COLUMNS; iCol++)
@@ -273,11 +273,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 
 			case 2: {
-				plvdi->item.pszText = const_cast<LPWSTR>(timerInfo[plvdi->item.iItem].Action);
+				std::wstring s = std::to_wstring(threadvec[plvdi->item.iItem].Act.getSeconds());
+				wchar_t* sec = _wcsdup(s.c_str());
+				plvdi->item.pszText = const_cast<LPWSTR>(sec);
 				break;
 			}
 
 			case 3: {
+				plvdi->item.pszText = const_cast<LPWSTR>(timerInfo[plvdi->item.iItem].Action);
+				break;
+			}
+
+			case 4: {
 				plvdi->item.pszText = const_cast<LPWSTR>(timerInfo[plvdi->item.iItem].ShowNotification);
 				break;
 			}
@@ -312,6 +319,7 @@ BOOL InsertListViewItems(HWND hWndListView)
 		lvI.iImage = index;
 
 		// Insert items into the list.
+		
 		if (ListView_InsertItem(listview, &lvI) == -1)
 			return FALSE;
 	}
@@ -331,8 +339,13 @@ BOOL AddListViewItem() {
 	lvI.iItem = index;
 	lvI.iImage = index;
 
-	if (ListView_InsertItem(listview, &lvI) == -1)
-		return FALSE;
+	try {
+		if (ListView_InsertItem(listview, &lvI) == -1)
+			return FALSE;
+	}
+	catch (std::exception& e) {
+	
+	}
 
 	return TRUE;
 }
@@ -365,7 +378,6 @@ INT_PTR CALLBACK AddItem(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	HWND combo = GetDlgItem(hDlg, IDC_COMBO1);
 	HWND check = GetDlgItem(hDlg, IDC_CHECK1);
 	HWND dt = GetDlgItem(hDlg, IDC_DATETIMEPICKER1);
-	const wchar_t* Actions[] = { L"Notify Only", L"Restart",L"ShutDown" };
 
 	switch (message)
 	{
@@ -396,7 +408,10 @@ INT_PTR CALLBACK AddItem(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				SYSTEMTIME time_selected;
 				HRESULT success = SendMessage(dt, DTM_GETSYSTEMTIME, (WPARAM)0, (LPARAM)&time_selected);
 				if (success == S_OK) {
-					// Get time from date picker and convert
+					// Declare action variable, and begin thread countdown after placing both in global vector
+					Action a{listview, id, time_selected, selected_dropdown, notify };
+					threadvec.push_back({ a, new std::thread(&Action::beginCountdown,a) });
+
 					timerInfo.push_back({ id, time_selected, Actions[selected_dropdown], notify });
 					AddListViewItem();
 				}

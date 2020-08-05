@@ -2,7 +2,6 @@
 
 #include "resource.h"
 #include "framework.h"
-#include "Timer.h"
 #include "winuser.h"
 #include <Windows.h>
 #include <vector>

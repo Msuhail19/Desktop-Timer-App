@@ -3,11 +3,10 @@
 
 #include "framework.h"
 #include "Timer.h"
-#include "winuser.h"
-#include <Windows.h>
 #include <string>
 #include <CommCtrl.h>
 #include <Uxtheme.h>
+#include "Action.h"
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "uxtheme.lib")
 
